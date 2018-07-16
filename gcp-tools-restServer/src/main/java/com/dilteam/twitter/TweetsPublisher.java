@@ -6,6 +6,7 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -20,6 +21,7 @@ import java.util.List;
 @Component
 @EnableAutoConfiguration
 public class TweetsPublisher implements StatusListener {
+    private static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TweetsPublisher.class);
 
     private int counter = 0;
     private int batchSize;
@@ -41,14 +43,14 @@ public class TweetsPublisher implements StatusListener {
         publisher = Publisher.newBuilder(topicName).build();
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                System.out.println("Inside shutdown hook! Shuttng down Publisher!");
+                LOGGER.info("Inside shutdown hook! Shuttng down Publisher!");
                 try {
                     // Wait on any pending requests
                     ApiFutures.allAsList(futures).get();
                     publisher.shutdown();
-                    System.out.println("Publisher was shut down successfully!");
+                    LOGGER.info("Publisher was shut down successfully!");
                 } catch (Exception e) {
-                    System.out.println("Error encountered while shutting down: " + e.getMessage());
+                    LOGGER.info("Error encountered while shutting down: " + e.getMessage());
                 }
             }
         });
@@ -60,15 +62,16 @@ public class TweetsPublisher implements StatusListener {
             return;
         }
         if (++counter % 100 == 0) {
-            System.out.println("$$$$$$  Total no. of tweets so far: " + counter + " at: "
+            LOGGER.info("$$$$$$  Total no. of tweets so far: " + counter + " at: "
                     + new Date(System.currentTimeMillis()).toString());
         }
 
         String message = TwitterObjectFactory.getRawJSON(status);
 
-        // convert message to bytes
+        // Convert message to bytes
         ByteString data = ByteString.copyFromUtf8(message);
         PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
+
         // Schedule a message to be published. Messages are automatically batched.
         ApiFuture<String> future = publisher.publish(pubsubMessage);
         futures.add(future);
@@ -76,26 +79,26 @@ public class TweetsPublisher implements StatusListener {
 
     @Override
     public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-//        System.out.println("onDeletionNotice: " + statusDeletionNotice.toString());
+//        LOGGER.info("onDeletionNotice: " + statusDeletionNotice.toString());
     }
 
     @Override
     public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-        System.out.println("onTrackLimitationNotice: " + numberOfLimitedStatuses);
+        LOGGER.info("onTrackLimitationNotice: " + numberOfLimitedStatuses);
     }
 
     @Override
     public void onScrubGeo(long userId, long upToStatusId) {
-        System.out.println("onScrubGeo: " + userId + "\t" + upToStatusId);
+        LOGGER.info("onScrubGeo: " + userId + "\t" + upToStatusId);
     }
 
     @Override
     public void onStallWarning(StallWarning warning) {
-        System.out.println("onStallWarning: " + warning.toString());
+        LOGGER.info("onStallWarning: " + warning.toString());
     }
 
     @Override
     public void onException(Exception ex) {
-        System.out.println("onException: " + ex.getMessage());
+        LOGGER.info("onException: " + ex.getMessage());
     }
 }
