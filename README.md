@@ -29,3 +29,12 @@ mvn clean install
 8. Start the 'RestServer' class either from command line or from your favorite IDE such as IntelliJ. This will automatically start streaming tweets into your table in BigQuery.
 
 
+## Using Dataflow & PubSub to load data into BigQuery
+
+1. Follow the steps given in the previous section EXCEPT in step 3 set **streamingType to PubSub*** & **topicId to <your topic id>***. Once you start the 'RestServer', it will start pumping Tweets into your topic.
+2. Go to [gcp-dataflow](./gcp-dataflow) directory & run **mvn clean install**
+3. Open a terminal window & run [run_on_cloud.sh](./gcp-dataflow/run_on_cloud.sh) as follows:
+```$xslt
+./run_on_cloud.sh <Your project id> <Your bucket name> TweetsWriter
+```
+4. When the job gets triggered successfully, you will see a URL that you can navigate to. Look for a message such as: **INFO: To access the Dataflow monitoring console, please navigate to**
