@@ -31,7 +31,7 @@ mvn clean install
 
 ## Using Dataflow & PubSub to load data into BigQuery
 
-1. Follow the steps given in the previous section EXCEPT in step 3 set **streamingType to PubSub*** & **topicId to <your topic id>***. Once you start the 'RestServer', it will start pumping Tweets into your topic.
+1. Follow the steps given in the previous section EXCEPT in step 3 set **streamingType to PubSub** & **topicId to your topic id***. Once you start the 'RestServer', it will start pumping Tweets into your topic.
 2. Go to [gcp-dataflow](./gcp-dataflow) directory & run **mvn clean install**
 3. Open a terminal window & run [run_on_cloud.sh](./gcp-dataflow/run_on_cloud.sh) as follows:
 ```
