@@ -12,5 +12,5 @@ authConsumerSecret
 authAccessToken
 authAccessTokenSecret
 ```
-3. You can enter the values of the above 4 properties in  [application.properties] (./gcp-tools-restServer/src/resources/application.properties) 
+3. You can enter the values of the above 4 properties in  [application.properties](./gcp-tools-restServer/src/main/resources/application.properties) 
 
