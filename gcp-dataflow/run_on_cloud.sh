@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export GOOGLE_APPLICATION_CREDENTIALS=/Users/ajay/Downloads/gcp-credentials-7b19bbb98d97.json
+export GOOGLE_APPLICATION_CREDENTIALS=<put path of your json containing credentials>
 
 if [ "$#" -lt 3 ]; then
    echo "Usage:   ./run_oncloud.sh project-name bucket-name classname [options] "
