@@ -3,8 +3,6 @@ package com.dilteam.dataflow;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
@@ -15,15 +13,17 @@ import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.values.PCollection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import twitter4j.Place;
 import twitter4j.Status;
 import twitter4j.TwitterObjectFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 public class TweetsWriter {
-    private static Logger LOGGER = LoggerFactory.getLogger(TweetsWriter.class);
+//    private static Logger LOGGER = LoggerFactory.getLogger(TweetsWriter.class);
 
     public TweetsWriter() {
     }
@@ -44,10 +44,10 @@ public class TweetsWriter {
         fields.add((new TableFieldSchema()).setName("RetweetCount").setType("INTEGER"));
         fields.add((new TableFieldSchema()).setName("FavoriteCount").setType("INTEGER"));
         fields.add((new TableFieldSchema()).setName("Language").setType("STRING"));
-        fields.add((new TableFieldSchema()).setName("ReceivedAt").setType("DATETIME"));
         fields.add((new TableFieldSchema()).setName("UserId").setType("INTEGER"));
         fields.add((new TableFieldSchema()).setName("CountryCode").setType("STRING"));
         fields.add((new TableFieldSchema()).setName("Country").setType("STRING"));
+        fields.add((new TableFieldSchema()).setName("ReceivedAt").setType("STRING"));
         TableSchema schema = (new TableSchema()).setFields(fields);
 
         PCollection<Status> statuses = p
@@ -58,17 +58,17 @@ public class TweetsWriter {
                     String rowJson = c.element();
 
                     try {
-                        TweetsWriter.LOGGER.debug("ROWJSON = " + rowJson);
+//                        TweetsWriter.LOGGER.debug("ROWJSON = " + rowJson);
                         Status status = TwitterObjectFactory.createStatus(rowJson);
                         if (status == null) {
-                            TweetsWriter.LOGGER.error("Status is null");
+//                            TweetsWriter.LOGGER.error("Status is null");
                         } else {
-                            TweetsWriter.LOGGER.debug("Status value: " + status.getText());
+//                            TweetsWriter.LOGGER.debug("Status value: " + status.getText());
                         }
                         c.output(status);
-                        TweetsWriter.LOGGER.debug("Status: " + status.getId());
+//                        TweetsWriter.LOGGER.debug("Status: " + status.getId());
                     } catch (Exception var4) {
-                        TweetsWriter.LOGGER.error("Status creation from JSON failed: " + var4.getMessage());
+//                        TweetsWriter.LOGGER.error("Status creation from JSON failed: " + var4.getMessage());
                     }
 
             }
@@ -82,13 +82,21 @@ public class TweetsWriter {
                         Status status = c.element();
                         row.set("Id", status.getId());
                         row.set("Text", status.getText());
-                        row.set("RetweetCount", status.getRetweetCount());
-                        row.set("FavoriteCount", status.getFavoriteCount());
-                        row.set("Language", status.getLang());
-                        row.set("ReceivedAt", (Object)null);
-                        row.set("UserId", status.getUser().getId());
-                        row.set("CountryCode", status.getPlace().getCountryCode());
-                        row.set("Country", status.getPlace().getCountry());
+                        row.set("RetweetCount", Optional.of(status.getRetweetCount()).orElse(0));
+                        row.set("FavoriteCount", Optional.of(status.getFavoriteCount()).orElse(0));
+                        row.set("Language", Optional.of(status.getLang()).orElse("Unknown"));
+                        row.set("UserId", Optional.of(status.getUser().getId()).orElse(0l));
+
+                        String countryCode = Optional.ofNullable(status.getPlace())
+                                .map(Place::getCountryCode)
+                                .orElse("Unknown");
+                        row.set("CountryCode", countryCode);
+
+                        String country = Optional.ofNullable(status.getPlace())
+                                .map(Place::getCountry)
+                                .orElse("Unknown");
+                        row.set("Country", country);
+                        row.set("ReceivedAt", null);
                         c.output(row);
                 }
             }))
