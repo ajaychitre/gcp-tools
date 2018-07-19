@@ -79,6 +79,7 @@ public class RestServer {
     public BigQuery getBigQuery() {
         System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCredentials);
         BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+        System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
         return bigquery;
     }
 
